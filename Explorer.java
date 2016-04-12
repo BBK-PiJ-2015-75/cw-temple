@@ -45,9 +45,10 @@ public class Explorer {
 	 *            the information available at the current state
 	 */
 	public void explore(ExplorationState state) {
-
+		
 		// create a set for visited nodes
 		HashMap<Long, Integer> visited = new HashMap<Long, Integer>();
+		
 
 		// decide which node to visit next
 		while (state.getDistanceToTarget() > 0) {
@@ -68,9 +69,10 @@ public class Explorer {
 
 			long moveToID = neighbourCloserToOrb.getId();
 			state.moveTo(moveToID);
-			if (visited.containsKey(moveToID)) {
-				visited.replace(moveToID, visited.get(moveToID) + 1);
-			} else {
+			if(visited.containsKey(moveToID)) {
+				visited.replace(moveToID, visited.get(moveToID)+1);
+			}
+			else {
 				visited.put(moveToID, 1);
 			}
 
@@ -112,14 +114,16 @@ public class Explorer {
 	 *            the information available at the current state
 	 */
 	public void escape(EscapeState state) {
-
+		int sizeOfMap = state.getTimeRemaining();
+		
 		Collection<Node> vertices = state.getVertices();
-
-		HashMap<Long, Integer> visited = new HashMap<Long, Integer>();
+		
+		HashMap<Long, Integer> visited = new HashMap<Long, Integer>();		
 
 		// run towards the exit
 		while (Math.abs(state.getExit().getId() - state.getCurrentNode().getId()) > 0) {
-
+			
+			
 			Collection<Node> neighbours = state.getCurrentNode().getNeighbours();
 
 			Iterator<Node> it = neighbours.iterator();
@@ -137,12 +141,14 @@ public class Explorer {
 
 			long moveToID = neighbourCloserToExit.getId();
 			state.moveTo(neighbourCloserToExit);
-			if (state.getCurrentNode().getTile().getGold() > 0) {
+			if(state.getCurrentNode().getTile().getGold() >0){
 				state.pickUpGold();
 			}
-			if (visited.containsKey(moveToID)) {
-				visited.replace(moveToID, visited.get(moveToID) + 1);
-			} else {
+			
+			if(visited.containsKey(moveToID)) {
+				visited.replace(moveToID, visited.get(moveToID)+1);
+			}
+			else {
 				visited.put(moveToID, 1);
 			}
 
@@ -151,9 +157,10 @@ public class Explorer {
 
 	private int assessNode(HashMap<Long, Integer> visited, Node temp, EscapeState state) {
 
-		return (int) Math.abs(state.getExit().getId() - state.getCurrentNode().getId())
-				+ (visited.containsKey(temp.getId()) ? 1000 * visited.get(temp.getId()) : 0);
+		return (int)Math.abs(state.getExit().getId() - state.getCurrentNode().getId()) + (visited.containsKey(temp.getId()) ? 
+				20000 * visited.get(temp.getId()) : 0);
 
 	}
+	
 
 }

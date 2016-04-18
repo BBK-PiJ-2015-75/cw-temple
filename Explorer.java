@@ -84,83 +84,79 @@ public class Explorer {
 		return temp.getDistanceToTarget() + (visited.containsKey(temp.getId()) ? 1000 * visited.get(temp.getId()) : 0);
 	}
 
-	/**
-	 * Escape from the cavern before the ceiling collapses, trying to collect as
-	 * much gold as possible along the way. Your solution must ALWAYS escape
-	 * before time runs out, and this should be prioritized above collecting
-	 * gold.
-	 * <p>
-	 * You now have access to the entire underlying graph, which can be accessed
-	 * through EscapeState. getCurrentNode() and getExit() will return you Node
-	 * objects of interest, and getVertices() will return a collection of all
-	 * nodes on the graph.
-	 * <p>
-	 * Note that time is measured entirely in the number of steps taken, and for
-	 * each step the time remaining is decremented by the weight of the edge
-	 * taken. You can use getTimeRemaining() to get the time still remaining,
-	 * pickUpGold() to pick up any gold on your current tile (this will fail if
-	 * no such gold exists), and moveTo() to move to a destination node adjacent
-	 * to your current node.
-	 * <p>
-	 * You must return from this function while standing at the exit. Failing to
-	 * do so before time runs out or returning from the wrong location will be
-	 * considered a failed run.
-	 * <p>
-	 * You will always have enough time to escape using the shortest path from
-	 * the starting position to the exit, although this will not collect much
-	 * gold.
-	 *
-	 * @param state
-	 *            the information available at the current state
-	 */
-	public void escape(EscapeState state) {
-		int sizeOfMap = state.getTimeRemaining();
-		
-		Collection<Node> vertices = state.getVertices();
-		
-		HashMap<Long, Integer> visited = new HashMap<Long, Integer>();		
+	 /**
+     * Escape from the cavern before the ceiling collapses, trying to collect as much
+     * gold as possible along the way. Your solution must ALWAYS escape before time runs
+     * out, and this should be prioritized above collecting gold.
+     * <p>
+     * You now have access to the entire underlying graph, which can be accessed through EscapeState.
+     * getCurrentNode() and getExit() will return you Node objects of interest, and getVertices()
+     * will return a collection of all nodes on the graph.
+     * <p>
+     * Note that time is measured entirely in the number of steps taken, and for each step
+     * the time remaining is decremented by the weight of the edge taken. You can use
+     * getTimeRemaining() to get the time still remaining, pickUp Gold() to pick up any gold
+     * on your current tile (this will fail if no such gold exists), and moveTo() to move
+     * to a destination node adjacent to your current node.
+     * <p>
+     * You must return from this function while standing at the exit. Failing to do so before time
+     * runs out or returning from the wrong location will be considered a failed run.
+     * <p>
+     * You will always have enough time to escape using the shortest path from the starting
+     * position to the exit, although this will not collect much gold.
+     *
+     * @param state the information available at the current state
+     */
+    public void escape(EscapeState state) {
+    	collectAllNeighbours(state);
+    	HashMap<Long,Integer> visited = new HashMap<Long,Integer>();
+    	
+    	while(Math.abs(state.getExit().getId() - state.getCurrentNode().getId()) > 0){
+    			collectAllNeighbours(state);
+		    	Collection<Node> neighbours = state.getCurrentNode().getNeighbours();
+		    	Iterator<Node> it = neighbours.iterator();
+		    	
+		    	Node neighborCloserToOrb = it.next();
+		    	
+		    	while (it.hasNext()){
+		    		Node node = it.next();
+		    		long value = Math.abs((neighborCloserToOrb.getId() - state.getExit().getId()))+((visited.containsKey((neighborCloserToOrb.getId()))? visited.get(neighborCloserToOrb.getId()) : 0));
+		    		long value2 = Math.abs((node.getId() - state.getExit().getId())) + (visited.containsKey((node.getId()))? visited.get(node.getId()) : 0);
+		    		if(value>value2){
+		    			neighborCloserToOrb = node;
+		    		}
+		    	}
+		    	state.moveTo(neighborCloserToOrb);
+		    	if(state.getCurrentNode().getTile().getGold() > 0){
+		    		state.pickUpGold();
+		    		collectAllNeighbours(state);
+		    	}
+		    	
+		    	if(!visited.containsKey(neighborCloserToOrb.getId())){
+		    		visited.put(neighborCloserToOrb.getId(), 1);
+		    	}
+		    	else{
+		    		visited.put(neighborCloserToOrb.getId(),visited.get(neighborCloserToOrb.getId()) + 1);
+		    	}
+	    	}
+    	}
 
-		// run towards the exit
-		while (Math.abs(state.getExit().getId() - state.getCurrentNode().getId()) > 0) {
-			
-			
-			Collection<Node> neighbours = state.getCurrentNode().getNeighbours();
-
-			Iterator<Node> it = neighbours.iterator();
-
-			Node neighbourCloserToExit = it.next();
-
-			while (it.hasNext()) {
-				Node temp = it.next();
-				int tempValue = assessNode(visited, temp, state);
-				int closeValue = assessNode(visited, neighbourCloserToExit, state);
-				if (tempValue < closeValue) {
-					neighbourCloserToExit = temp;
-				}
-			}
-
-			long moveToID = neighbourCloserToExit.getId();
-			state.moveTo(neighbourCloserToExit);
-			if(state.getCurrentNode().getTile().getGold() >0){
-				state.pickUpGold();
-			}
-			
-			if(visited.containsKey(moveToID)) {
-				visited.replace(moveToID, visited.get(moveToID)+1);
-			}
-			else {
-				visited.put(moveToID, 1);
-			}
-
-		}
-	}
-
-	private int assessNode(HashMap<Long, Integer> visited, Node temp, EscapeState state) {
-
-		return (int)Math.abs(state.getExit().getId() - state.getCurrentNode().getId()) + (visited.containsKey(temp.getId()) ? 
-				20000 * visited.get(temp.getId()) : 0);
-
-	}
-	
-
+    
+    public void collectAllNeighbours(EscapeState state){
+    	Collection<Node> neighbors = state.getCurrentNode().getNeighbours();
+    	Iterator<Node> it = neighbors.iterator();
+    	Node maxGold = it.next();    	
+    	while(it.hasNext()){
+    		Node current = it.next();
+    		if(current.getTile().getGold() > maxGold.getTile().getGold()){
+    			maxGold = current;
+    		}
+    	}
+    	if(maxGold.getTile().getGold() != 0){
+    		state.moveTo(maxGold);
+    		state.pickUpGold();
+    		collectAllNeighbours(state);
+    	}
+    }
+    
 }
